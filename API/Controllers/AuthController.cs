@@ -17,7 +17,7 @@ namespace API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var userId = await _identityService.RegisterAsync(dto.Email, dto.Password);
+            var userId = await _identityService.RegisterAsync(dto.Email, dto.Password,dto.FirstName,dto.LastName);
             return Ok(new { UserId = userId });
         }
 
@@ -32,6 +32,8 @@ namespace API.Controllers
     {
         public string Email { get; set; }
         public string Password { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
     }
 
     public class LoginDto

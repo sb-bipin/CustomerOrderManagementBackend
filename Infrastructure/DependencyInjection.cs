@@ -24,7 +24,15 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<ApplicationDbContext>());
 
-        services.AddIdentity<ApplicationUser, IdentityRole>()
+        services.AddIdentity<ApplicationUser, IdentityRole>
+                (options =>
+                {
+                    options.Password.RequireDigit = false;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequiredLength = 6;
+                    options.Password.RequireNonAlphanumeric = false;
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 

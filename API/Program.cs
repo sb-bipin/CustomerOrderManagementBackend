@@ -7,6 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+// Add logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.SetMinimumLevel(LogLevel.Debug); 
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

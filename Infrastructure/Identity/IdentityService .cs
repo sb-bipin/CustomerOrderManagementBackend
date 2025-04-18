@@ -15,9 +15,20 @@ namespace Infrastructure.Identity
             _signInManager = signInManager;
         }
 
-        public async Task<string> RegisterAsync(string email, string password)
+        public async Task<string> RegisterAsync(string email, string password,string firstName,string lastName)
         {
-            var user = new ApplicationUser { UserName = email, Email = email };
+            var user = new ApplicationUser {
+                UserName = email,
+                NormalizedUserName = email.ToUpperInvariant(),
+                Email = email,
+                NormalizedEmail = email.ToUpperInvariant(),
+                FirstName = firstName,
+                LastName = lastName,
+                UserType = Domain.Enums.UserType.Customer,
+                CreatedBy = new Guid(),
+                CreatedOn = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
+                UpdatedBy = new Guid()
+            };
             var result = await _userManager.CreateAsync(user, password);
 
             if (!result.Succeeded)
@@ -28,12 +39,16 @@ namespace Infrastructure.Identity
 
         public async Task<string> LoginAsync(string email, string password)
         {
-            var result = await _signInManager.PasswordSignInAsync(email, password, false, false);
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+                throw new Exception("Username not found for login.");
+
+            var result = await _signInManager.PasswordSignInAsync(user.UserName!, password, false, false);
 
             if (!result.Succeeded)
                 throw new Exception("Invalid login attempt.");
 
-            var user = await _userManager.FindByEmailAsync(email);
             return user.Id;
         }
 
