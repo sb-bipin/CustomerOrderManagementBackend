@@ -1,5 +1,6 @@
-using Application;
+﻿using Application;
 using Infrastructure;
+using Infrastructure.Persistence;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,12 +14,18 @@ builder.Services.AddSwaggerGen();
 
 builder.Services
     .AddApplication()
-    .AddInfrastructure();
+    .AddInfrastructure(builder.Configuration);
 
 builder.Host.UseSerilog((ContextBoundObject, configuration) =>
-    configuration.ReadFrom.Configuration(builder.Configuration));   
+    configuration.ReadFrom.Configuration(builder.Configuration));
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedInitialData.SeedAsync(services); 
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
