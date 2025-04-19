@@ -1,4 +1,5 @@
 ﻿using Application.Common.Interfaces;
+using Infrastructure.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -8,6 +9,7 @@ namespace API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IIdentityService _identityService;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthController(IIdentityService identityService)
         {
@@ -22,10 +24,12 @@ namespace API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        public async Task<ActionResult<LogInResponse>> Login([FromBody] LoginDto dto)
         {
-            var userId = await _identityService.LoginAsync(dto.Email, dto.Password);
-            return Ok(new { UserId = userId });
+            //_logger.LogInformation("This is an info log from the controller!");  //its here for testing purpose only 
+
+            var response = await _identityService.LoginAsync(dto.Email, dto.Password);
+            return Ok(response);
         }
     }
     public class RegisterDto

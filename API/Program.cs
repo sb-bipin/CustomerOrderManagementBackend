@@ -5,17 +5,17 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configure Serilog first
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console() // ✅ This writes logs to terminal
+    .CreateLogger();
 
-// Add logging
-builder.Services.AddLogging(logging =>
-{
-    logging.AddConsole();
-    logging.SetMinimumLevel(LogLevel.Debug); 
-});
+builder.Host.UseSerilog(); // ✅ Hook Serilog into the host
 
+// Add services to the container
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -23,25 +23,28 @@ builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
 
-builder.Host.UseSerilog((ContextBoundObject, configuration) =>
-    configuration.ReadFrom.Configuration(builder.Configuration));
+// Optional: Use built-in logging in addition to Serilog (not required if you're only using Serilog)
+builder.Logging.ClearProviders(); // Clear default loggers
+builder.Logging.AddConsole();     // Console logger writes to Kestrel terminal
+builder.Logging.SetMinimumLevel(LogLevel.Debug); // Ensure all logs are shown
 
 var app = builder.Build();
 
+// Seed initial data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    await SeedInitialData.SeedAsync(services); 
+    await SeedInitialData.SeedAsync(services);
 }
 
-// Configure the HTTP request pipeline.
+// Enable Swagger only in dev
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(); // ✅ Log HTTP requests
 
 app.UseHttpsRedirection();
 

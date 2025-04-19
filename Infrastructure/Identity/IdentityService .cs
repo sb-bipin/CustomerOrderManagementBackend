@@ -1,6 +1,7 @@
 ﻿using Application.Common.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Infrastructure.Identity
 {
@@ -8,11 +9,15 @@ namespace Infrastructure.Identity
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ITokenService _tokenService;
 
-        public IdentityService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public IdentityService(UserManager<ApplicationUser> userManager,
+                               SignInManager<ApplicationUser> signInManager,
+                               ITokenService tokenService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _tokenService = tokenService;
         }
 
         public async Task<string> RegisterAsync(string email, string password,string firstName,string lastName)
@@ -26,8 +31,7 @@ namespace Infrastructure.Identity
                 LastName = lastName,
                 UserType = Domain.Enums.UserType.Customer,
                 CreatedBy = new Guid(),
-                CreatedOn = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
-                UpdatedBy = new Guid()
+                CreatedOn = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
             };
             var result = await _userManager.CreateAsync(user, password);
 
@@ -37,7 +41,7 @@ namespace Infrastructure.Identity
             return user.Id;
         }
 
-        public async Task<string> LoginAsync(string email, string password)
+        public async Task<LogInResponse> LoginAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -49,7 +53,13 @@ namespace Infrastructure.Identity
             if (!result.Succeeded)
                 throw new Exception("Invalid login attempt.");
 
-            return user.Id;
+            var token = _tokenService.GenerateJwtToken(user);
+
+            return new LogInResponse
+            {
+                UserId = user.Id,
+                Token = token
+            };
         }
 
         public async Task<bool> AddToRoleAsync(string userId, string role)

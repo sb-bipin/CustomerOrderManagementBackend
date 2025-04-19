@@ -22,7 +22,7 @@ namespace Infrastructure.Persistence
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                throw new InvalidOperationException("A connection string named 'DefaultConnection' was not found in appsettings.json or secrets.json.");
+                throw new InvalidOperationException($"A connection string named '{connectionString}' was not found in appsettings.json or secrets.json.");
             }
 
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
