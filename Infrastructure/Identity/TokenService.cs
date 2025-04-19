@@ -21,7 +21,8 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
             new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim("userType", user.UserType.ToString())
+            new Claim("userType", user.UserType.ToString()),
+            //if any new details want to add on token then add it here eg:: info about users
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
@@ -33,7 +34,7 @@ public class TokenService : ITokenService
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(2),
+            expires: DateTime.UtcNow.AddMinutes(30),
             signingCredentials: creds
         );
 
