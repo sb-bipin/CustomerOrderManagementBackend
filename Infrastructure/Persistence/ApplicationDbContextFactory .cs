@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using System.IO;
 using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.Configuration.UserSecrets;
+using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence
 {
@@ -28,7 +29,16 @@ namespace Infrastructure.Persistence
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseSqlServer(connectionString);
 
-            return new ApplicationDbContext(optionsBuilder.Options);
+            var currentLoggedInUserService = new DesignTimeCurrentUserService();
+
+            return new ApplicationDbContext(optionsBuilder.Options, currentLoggedInUserService);
         }
     }
+}
+
+
+
+public class DesignTimeCurrentUserService : ICurrentLoggedInUserService
+{
+    public Guid? UserId => Guid.Empty;
 }

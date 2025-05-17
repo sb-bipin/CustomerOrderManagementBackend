@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class DessertsOrder : IEntity
+    public class DessertsOrder : CommonEntities,IEntity
     {
         [Key]
         public Guid Id { get; set; }
