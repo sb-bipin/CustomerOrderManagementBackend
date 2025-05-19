@@ -1,7 +1,11 @@
 ﻿using Application.Common.Interfaces;
+using Application.Common.Models;
+using Domain.Enums;
+using Infrastructure.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Identity
 {
@@ -20,6 +24,29 @@ namespace Infrastructure.Identity
             _tokenService = tokenService;
         }
 
+        public async Task<List<IApplicationUser>> GetAllUsersAsync()
+        {
+            var users = await _userManager.Users
+                                .Select(user => new ApplicationUserDto
+                                {
+                                    Id = user.Id,
+                                    Email = user.Email,
+                                    FirstName = user.FirstName,
+                                    LastName = user.LastName,
+                                    UserType = user.UserType,
+                                    CreatedBy = user.CreatedBy,
+                                    CreatedOn = user.CreatedOn,
+                                    UpdatedBy = user.UpdatedBy,
+                                    UpdatedOn = user.UpdatedOn
+                                })
+                                .ToListAsync();
+
+
+            if(users is null || !users.Any())
+                return new List<IApplicationUser>();
+
+            return users.Cast<IApplicationUser>().ToList();
+        }
         public async Task<string> RegisterAsync(string email, string password,string firstName,string lastName)
         {
             var user = new ApplicationUser {
@@ -41,7 +68,7 @@ namespace Infrastructure.Identity
             return user.Id;
         }
 
-        public async Task<LogInResponse> LoginAsync(string email, string password)
+        public async Task<ILogInResponse> LoginAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
 

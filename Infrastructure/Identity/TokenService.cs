@@ -1,4 +1,5 @@
-﻿using Infrastructure.Identity;
+﻿using Application.Common.Interfaces;
+using Infrastructure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -8,10 +9,12 @@ using System.Text;
 public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
+    public ICurrentLoggedInUserService _currentUserLoggedInService { get; set; }
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(IConfiguration configuration,ICurrentLoggedInUserService currentLoggedInUserService)
     {
         _configuration = configuration;
+        _currentUserLoggedInService = currentLoggedInUserService;
     }
 
     public string GenerateJwtToken(ApplicationUser user)
@@ -22,6 +25,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim("userType", user.UserType.ToString()),
+            new Claim("UserId",_currentUserLoggedInService.UserId.ToString())
             //if any new details want to add on token then add it here eg:: info about users
         };
 

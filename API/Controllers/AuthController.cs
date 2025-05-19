@@ -1,5 +1,7 @@
 ﻿using Application.Common.Interfaces;
+using Application.Common.Models;
 using Infrastructure.Identity;
+using Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -30,6 +32,12 @@ namespace API.Controllers
 
             var response = await _identityService.LoginAsync(dto.Email, dto.Password);
             return Ok(response);
+        }
+
+        [HttpGet]
+        public async Task<List<IApplicationUser>> GetAllUsers()
+        {
+            return await _identityService.GetAllUsersAsync();
         }
     }
     public class RegisterDto
