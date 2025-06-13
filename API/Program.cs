@@ -36,12 +36,10 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .WriteTo.Console()
-.WriteTo.File(
-    "logs/log-.txt",
-    rollingInterval: RollingInterval.Day,
-    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}",
-    retainedFileCountLimit: 15
-).CreateLogger();
+    .WriteTo.File("C:\\Logs\\log-.txt",
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit : 15)
+    .CreateLogger();
 
 builder.Host.UseSerilog(); 
 builder.Services.AddControllers();
