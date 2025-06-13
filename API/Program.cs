@@ -1,7 +1,9 @@
 ﻿using Application;
+using Application.Common.Interfaces;
 using Infrastructure;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -9,10 +11,10 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)  //Ensures token is validate in each request for API and runtime token validation
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)  
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false; // true in production
+        options.RequireHttpsMetadata = false; 
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -29,25 +31,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)  //En
         };
     });
 
-// Configure Serilog first
+//This is to configuring serilog logging
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
-    .WriteTo.Console() // ✅ This writes logs to terminal
+    .WriteTo.Console() 
     .CreateLogger();
 
-builder.Host.UseSerilog(); // ✅ Hook Serilog into the host
-
-// Add services to the container
+builder.Host.UseSerilog(); 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
 
-builder.Services.AddSwaggerGen(c =>  //use for developer testing API using bearer token
+builder.Services.AddSwaggerGen(c =>  
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "COMS API's", Version = "v1" });
 
-    // 🔐 Add JWT bearer token support
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -76,28 +74,39 @@ builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
 
-// Optional: Use built-in logging in addition to Serilog (not required if you're only using Serilog)
-builder.Logging.ClearProviders(); // Clear default loggers
-builder.Logging.AddConsole();     // Console logger writes to Kestrel terminal
-builder.Logging.SetMinimumLevel(LogLevel.Debug); // Ensure all logs are shown
+builder.Logging.ClearProviders(); 
+builder.Logging.AddConsole();    
+builder.Logging.SetMinimumLevel(LogLevel.Debug); 
 
 var app = builder.Build();
 
-// Seed initial data
+app.UseExceptionHandler(config =>
+{
+    config.Run(async context =>
+    {
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
+        if (exception != null)
+        {
+            var mapper = context.RequestServices.GetRequiredService<IExceptionToResponseMapper>();
+            await mapper.HandleExceptionAsync(context, exception);
+        }
+    });
+});
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     await SeedInitialData.SeedAsync(services);
 }
 
-// Enable Swagger only in dev
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseSerilogRequestLogging(); // ✅ Log HTTP requests
+app.UseSerilogRequestLogging(); 
 
 app.UseHttpsRedirection();
 
